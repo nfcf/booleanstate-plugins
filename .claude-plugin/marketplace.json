@@ -1,0 +1,12 @@
+{
+  "name": "booleanstate",
+  "description": "Claude Code plugins by BooleanState.",
+  "owner": { "name": "BooleanState" },
+  "plugins": [
+    {
+      "name": "cctime",
+      "source": "./plugins/cctime",
+      "description": "Billable time per client from your Claude Code sessions."
+    }
+  ]
+}

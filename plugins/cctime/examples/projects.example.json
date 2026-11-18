@@ -1,0 +1,5 @@
+{
+  "~/Repos/acme": "Acme",
+  "~/Repos/client-b": "Client B",
+  "~/Repos/client-b/legacy-app": "Client B legacy"
+}

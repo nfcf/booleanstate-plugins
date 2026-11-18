@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+.DS_Store
+# personal setup notes (switchover from the pre-plugin install), not published
+notes/
