@@ -1,6 +1,6 @@
 # BooleanState Claude Code plugins
 
-A Claude Code plugin marketplace.
+A Claude Code plugin marketplace by [BooleanState](https://www.booleanstate.com/).
 
 | Plugin | What it does |
 |---|---|
@@ -8,12 +8,15 @@ A Claude Code plugin marketplace.
 
 ## Install
 
-In Claude Code:
+In Claude Code, add the marketplace once, then install the plugins you want:
 
-    /plugin marketplace add <org>/booleanstate-plugins
+    /plugin marketplace add nfcf/booleanstate-plugins
     /plugin install cctime@booleanstate
 
-From a clone, use the folder instead: `/plugin marketplace add ~/path/to/booleanstate-plugins`.
+Restart open Claude Code sessions so they pick up the plugin's hooks.
+
+To get new versions later, run `/plugin marketplace update booleanstate`. From a clone, add the folder instead:
+`/plugin marketplace add ~/path/to/booleanstate-plugins`.
 
 ## License
 

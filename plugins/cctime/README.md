@@ -13,7 +13,7 @@ It is built for billing:
 
 ## Install
 
-    /plugin marketplace add <org>/booleanstate-plugins
+    /plugin marketplace add nfcf/booleanstate-plugins
     /plugin install cctime@booleanstate
 
 Restart open Claude Code sessions so they pick up the hooks. The hooks run `python3`, so you need macOS or
@@ -125,4 +125,4 @@ Pause/resume, heartbeats from tool calls, a status line (plugins can't ship one)
 
 ## License
 
-MIT
+MIT. Made by [BooleanState](https://www.booleanstate.com/).
