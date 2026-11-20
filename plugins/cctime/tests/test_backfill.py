@@ -84,3 +84,14 @@ class BackfillTest(Sandbox):
         self.transcript('s1', [line('user', '10:00', 's1'), line('assistant', '10:05', 's1')])
         self.run_script('cctime_backfill.py', '--since', '2026-01-06')
         self.assertEqual(self.events(), [])
+
+    def test_worktree_event_stores_main_checkout(self):
+        import subprocess
+        repo, worktree = os.path.join(self.tmp, 'work', 'app'), os.path.join(self.tmp, 'work', 'app-T-1')
+        subprocess.run(['git', 'init', '-q', repo], check=True)
+        subprocess.run(['git', '-C', repo, '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '--allow-empty', '-m', 'x'], check=True)
+        subprocess.run(['git', '-C', repo, 'worktree', 'add', '-q', worktree], check=True)
+        self.write_json('projects.json', {'~/work/app': 'App', '~/work': 'Other'})
+        self.transcript('s1', [line('user', '10:00', 's1', cwd=worktree), line('assistant', '10:05', 's1', cwd=worktree)])
+        self.run_script('cctime_backfill.py')
+        self.assertEqual({(e['project'], e.get('main')) for e in self.events()}, {('App', repo)})

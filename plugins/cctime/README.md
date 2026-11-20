@@ -6,7 +6,8 @@ It is built for billing:
 - **Agent and review time.** Time while Claude works plus the time you spend reading its answer before the next prompt.
 - **No double counting.** Parallel sessions on the same client are merged. Different clients each get their own
   total, and the report prints wall-clock time and the parallel overlap so you can see the difference.
-- **Clients by folder.** `~/Repos/acme` → `Acme`, longest prefix wins. `/cctime:setup` writes the mapping for you.
+- **Clients by folder.** `~/Repos/acme` → `Acme`, longest prefix wins. A git worktree (e.g. `~/Repos/acme-ABC-123`) counts as its
+  main checkout unless it has a rule of its own. `/cctime:setup` writes the mapping for you.
 - **Tickets from branch names.** `feature/ABC-123-login` adds `ABC-123` to the day's row.
 - **Dev containers.** Claude Code running inside a container is counted too.
 - **Local only.** Nothing leaves your machine, and prompt text is never stored. Python 3.9+ standard library only.
@@ -52,8 +53,10 @@ compact one-line-per-row layout, which stays stable for scripts that read the ou
 - Branch names with Jira IDs (e.g. `feature/ABC-123-x`) are captured in the tickets column.
 - `--round 15` rounds each client/day up to 15 minutes.
 
-The client is resolved when an event is logged. If you change the mapping later, earlier events keep their old
-name; run the report with `remap` (`--remap`) to re-resolve them from their folders. After the totals, the report
+The client is resolved when an event is logged. When `/cctime:setup` changes the mapping, it also relabels past
+events in folders the new rules cover (backing up the logs first). If you edit `projects.json` by hand, run
+`/cctime:setup` once to relabel, or run the report with `remap` (`--remap`) to re-resolve events for that report
+only. Events in folders no rule covers keep the name they were logged with. After the totals, the report
 lists **Unmapped folders**: time in folders no rule covers, with a hint to run `/cctime:setup`.
 
 ## Manual time

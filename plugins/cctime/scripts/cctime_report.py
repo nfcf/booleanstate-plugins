@@ -120,8 +120,9 @@ def folder_of(e, rules):
         return e['_repo'], e['_repo'], c.is_mapped(c.resolve(e['_repo'], rules), rules)
     cwd = e.get('cwd')
     if not cwd: return None
-    top = c.git_top(cwd)
-    return top or cwd, top or None, c.is_mapped(c.resolve_cwd(cwd, rules), rules)
+    main = e.get('main') or c.worktree_main(cwd)                # a worktree is listed under its main checkout
+    top = main or c.git_top(cwd)
+    return top or cwd, top or None, c.is_mapped(c.resolve_cwd(cwd, rules, main), rules)
 
 
 def unmapped(iv, rules, d0, d1):
@@ -144,7 +145,7 @@ def collect(a, rules):
     if a.remap:
         for r in evs:
             if r.get('_repo'): continue                         # container logs already resolve from the repo folder
-            if r.get('cwd'): r['project'] = c.resolve_cwd(r['cwd'], rules)
+            if r.get('cwd'): r['project'] = c.resolve_cwd(r['cwd'], rules, r.get('main'))
     iv = intervals(evs, timedelta(minutes=a.max_run), timedelta(minutes=a.idle))
     tz = datetime.now().astimezone().tzinfo
     if os.path.exists(a.manual):

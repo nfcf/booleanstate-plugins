@@ -1,6 +1,6 @@
 {
   "name": "cctime",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Billable time per client from your Claude Code sessions: agent and review time, parallel sessions never double counted, tickets from branch names, dev containers. Local only, Python stdlib.",
   "author": {
     "name": "Nuno Freire"

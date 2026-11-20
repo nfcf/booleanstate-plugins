@@ -18,16 +18,19 @@ def main():
         return
     cwd = data.get('cwd') or os.getcwd()
     branch = c.git(cwd, 'rev-parse', '--abbrev-ref', 'HEAD')
+    main = c.worktree_main(cwd)
     rec = {
         'ts': datetime.now(timezone.utc).isoformat(timespec='seconds'),
         'event': data.get('hook_event_name'),
         'session': data.get('session_id'),
         'cwd': cwd,
-        'project': c.resolve_cwd(cwd, c.load_rules()),
+        'project': c.resolve_cwd(cwd, c.load_rules(), main),
         'branch': branch or None,
         'ticket': c.ticket_for(branch),
         'host': socket.gethostname(),
     }
+    if main:
+        rec['main'] = main
     for k in ('source', 'reason', 'agent_id', 'agent_type'):
         if data.get(k):
             rec[k] = data[k]

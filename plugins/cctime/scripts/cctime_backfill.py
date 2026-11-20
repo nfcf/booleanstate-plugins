@@ -111,9 +111,11 @@ def synthesize(sid, lines, rules, cutoff, since):
         if cutoff is not None and t >= cutoff: return
         if since is not None and t.astimezone().date() < since: return
         cwd = cwd or ''
+        main = c.worktree_main(cwd) if cwd else None
         evs.append({'ts': t.astimezone(timezone.utc).isoformat(timespec='seconds'), 'event': event, 'session': sid,
-                    'cwd': cwd, 'project': c.resolve_cwd(cwd, rules) if cwd else 'unknown',
+                    'cwd': cwd, 'project': c.resolve_cwd(cwd, rules, main) if cwd else 'unknown',
                     'branch': branch or None, 'ticket': c.ticket_for(branch), 'source': 'backfill'})
+        if main: evs[-1]['main'] = main
 
     for t, kind, cwd, branch in lines:
         if kind == 'prompt':

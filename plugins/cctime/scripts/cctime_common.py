@@ -23,7 +23,9 @@ def ticket_for(branch):
 
 def git(cwd, *args):
     try:
-        return subprocess.run(['git', '-C', cwd, *args], capture_output=True, text=True, timeout=2).stdout.strip()
+        env = {k: v for k, v in os.environ.items()                # an inherited GIT_DIR would answer for every cwd
+               if k not in ('GIT_DIR', 'GIT_WORK_TREE', 'GIT_COMMON_DIR', 'GIT_INDEX_FILE')}
+        return subprocess.run(['git', '-C', cwd, *args], capture_output=True, text=True, timeout=2, env=env).stdout.strip()
     except Exception:
         return ''
 
@@ -38,11 +40,14 @@ def load_rules(path=None):
         return {}
 
 
+def longest_prefix(path, rules):
+    """The longest rule folder that is `path` or one of its parents, else None."""
+    return next((pre for pre in sorted(rules, key=len, reverse=True) if path == pre or path.startswith(pre + '/')), None)
+
+
 def match_prefix(path, rules):
-    for pre in sorted(rules, key=len, reverse=True):
-        if path == pre or path.startswith(pre + '/'):
-            return rules[pre]
-    return None
+    pre = longest_prefix(path, rules)
+    return rules[pre] if pre is not None else None
 
 
 def resolve(path, rules, top=None):
@@ -63,10 +68,52 @@ def git_top(cwd):
     return _tops[cwd]
 
 
-def resolve_cwd(cwd, rules):
-    """What the logger records for an event in `cwd`."""
-    hit = match_prefix(cwd, rules)
-    return hit if hit is not None else resolve(cwd, rules, git_top(cwd))
+_mains = {}
+def git_main(cwd):
+    """Main checkout of the repo cwd is in (cached), '' when not a repo or gone. For a linked worktree such as
+    ~/Repos/app-MS-1 this is ~/Repos/app. Given in cwd's form (git reports real paths), so a checkout reached through
+    a symlink still matches cwd and the rules."""
+    if cwd not in _mains:
+        common = git(cwd, 'rev-parse', '--git-common-dir') if cwd and os.path.isdir(cwd) else ''
+        main = ''
+        if common and '\n' not in common and os.path.basename(common) == '.git':  # not a submodule or bare repo
+            real_cwd = os.path.realpath(cwd)
+            real = os.path.normpath(os.path.join(real_cwd, common))            # git answers in real paths
+            main = os.path.dirname(os.path.normpath(os.path.join(cwd, os.path.relpath(real, real_cwd))))
+            try:
+                same = os.path.samefile(os.path.join(main, '.git'), real)
+            except OSError:
+                same = False
+            if not same:                                                     # a symlink below the shared folder
+                main = os.path.dirname(real)
+        _mains[cwd] = main
+    return _mains[cwd]
+
+
+def worktree_main(cwd):
+    """Main checkout when cwd is in a linked worktree, else None. Events store it, so they still resolve after the
+    worktree is removed."""
+    main = git_main(cwd)
+    return main if main and not (cwd == main or cwd.startswith(main + '/')) else None
+
+
+def rule_for(cwd, rules, main=None):
+    """Longest rule for cwd. The main checkout's rule takes over when cwd has none, or when cwd's rule also covers the
+    main checkout (a catch-all like ~/Repos), so a worktree resolves like its repo unless it has a rule of its own."""
+    pre = longest_prefix(cwd, rules)
+    if main:
+        main_pre = longest_prefix(main, rules)
+        if main_pre is not None and (pre is None or main == pre or main.startswith(pre + '/')):
+            return main_pre
+    return pre
+
+
+def resolve_cwd(cwd, rules, main=None):
+    """What the logger records for an event in `cwd`. `main` is a worktree's stored main checkout; without it, it is
+    looked up, which needs cwd to still exist."""
+    main = main or worktree_main(cwd)
+    pre = rule_for(cwd, rules, main)
+    return rules[pre] if pre is not None else resolve(cwd, rules, main or git_top(cwd))
 
 
 def is_mapped(name, rules):
